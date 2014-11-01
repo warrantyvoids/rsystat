@@ -1,0 +1,4 @@
+rsystat
+=======
+
+Remote system status
