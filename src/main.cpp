@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
   attron(A_DIM);
   mvaddstr(0, 0, "Hostname");
   mvaddstr(0,40, "| Load");
-  mvaddstr(0,60, "| #usr");
+  mvaddstr(0,47, "| #usr");
   attroff(A_DIM);
   start_color();
   init_pair(1, COLOR_RED, COLOR_BLACK);
@@ -77,6 +77,10 @@ int main(int argc, char** argv) {
         t.chars[0] = L'\u2581'+ loadScaled ;
         add_wch( &t );
       }
+      
+      mvaddstr(row, 47, "| ");
+      addstr( std::to_string( conn.getOS()->getNUsers() ).c_str() );      
+      
       row++;
     }
     refresh();

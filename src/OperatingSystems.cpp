@@ -1,11 +1,38 @@
 #include "OperatingSystems.h"
 
 #include <sstream>
+#include <limits>
 
-class LinuxOperatingSystem : public OperatingSystem {
+class UnixOperatingSystem : public OperatingSystem {
+  public:
+    UnixOperatingSystem(Connection& conn, std::string name) 
+       : OperatingSystem(name), m_conn(conn) { }
+    
+    std::size_t getNUsers() override {
+      ExecChannel exec = m_conn.exec("who -q");
+      std::istream& in = exec.getStdOut();
+
+      in.ignore( std::numeric_limits<std::streamsize>::max(), '=');
+      
+      std::size_t nusers = 0;
+      in >> nusers;
+      
+      return nusers;            
+      
+    }
+    
+    std::vector<std::string> getUsers() override {
+     
+    }
+    
+  protected:
+    Connection& m_conn;
+};
+
+class LinuxOperatingSystem : public UnixOperatingSystem {
   public:
     LinuxOperatingSystem(Connection& conn, std::string name) :
-       OperatingSystem(name), m_conn(conn) {
+       UnixOperatingSystem(conn, name) {
     }
     
     std::array<double,3> getLoad() override {
@@ -18,22 +45,12 @@ class LinuxOperatingSystem : public OperatingSystem {
       return loads;
     }
     
-    std::size_t getNUsers() override {
-      return 0;
-    }
-    
-    std::vector<std::string> getUsers() override {
-      return std::vector<std::string>();
-    }
-    
-  private:
-    Connection& m_conn;
 };
 
-class FreeBSDOperatingSystem : public OperatingSystem {
+class FreeBSDOperatingSystem : public UnixOperatingSystem {
   public:
     FreeBSDOperatingSystem(Connection& conn, std::string name) :
-       OperatingSystem(name), m_conn(conn) {
+       UnixOperatingSystem(conn,name) {
     }
     
     std::array<double,3> getLoad() override {
@@ -48,15 +65,6 @@ class FreeBSDOperatingSystem : public OperatingSystem {
       return loads;
     }
     
-    std::size_t getNUsers() override {
-      return 0;
-    }
-    
-    std::vector<std::string> getUsers() override {
-      return std::vector<std::string>();
-    }
-  private:
-    Connection& m_conn;
 };
 
 OperatingSystem* createOS(Connection& conn) {
