@@ -29,6 +29,7 @@ void offending() {
   getmaxyx(stdscr, maxy, maxx);
   char action;
   do {
+    clear();
     mvaddstr(0,0, "Host");
     mvaddstr(0,20, "Program");
     mvaddstr(0,40, "User");
@@ -44,7 +45,7 @@ void offending() {
       mvaddnstr(row, 50, std::to_string(p.pid).c_str(), 10);
       mvaddnstr(row, 60, std::to_string(p.cpu).c_str(), 5);
       mvaddnstr(row, 66, std::to_string(p.mem).c_str(), 5);
-      mvaddnstr(row, 72, std::to_string(p.time).c_str(), 8);
+      mvaddnstr(row, 72, std::to_string(p.time / 60.0 / 60.0).c_str(), 8);
       
       row++;
       if (row == maxy)
