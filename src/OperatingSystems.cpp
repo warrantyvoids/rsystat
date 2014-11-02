@@ -22,7 +22,26 @@ class UnixOperatingSystem : public OperatingSystem {
     }
     
     std::vector<std::string> getUsers() override {
-     
+      
+    }
+    
+    std::vector<Process> getProcesses() override {
+      std::vector<Process> returns;
+      ExecChannel exec = m_conn.exec("ps acx -o command,user,pid,pcpu,pmem,etimes");
+      std::istream& in = exec.getStdOut();
+      
+      std::string line;
+      std::getline(in, line);
+      
+      Process p;
+      p.connection = &m_conn;
+      while (std::getline(in, line)) {
+        std::istringstream lin(line);
+        
+        lin >> p.command >> p.user >> p.pid >> p.cpu >> p.mem >> p.time;
+        returns.push_back(p);
+      }
+      return returns;
     }
     
   protected:

@@ -1,14 +1,72 @@
 #include <iostream>
 #include <curses.h>
 #include <cmath>
+#include <algorithm>
 
 #include "Connection.h"
 #include "Configuration.h"
 
+static std::vector<Connection> connections;
+
+void offending() {
+  std::vector<Process> processes;
+  for (Connection& conn : connections) {
+    if (!conn)
+      break;
+    
+    std::vector<Process> process = conn.getOS()->getProcesses();
+    for (Process& p : process)
+      processes.push_back(p);
+  }
+  std::sort(processes.begin(), processes.end(), [](Process a, Process b) -> bool {
+    return a.time > b.time;
+  });
+  
+  clear();
+  refresh();
+  
+  int maxx, maxy;
+  getmaxyx(stdscr, maxy, maxx);
+  char action;
+  do {
+    mvaddstr(0,0, "Host");
+    mvaddstr(0,20, "Program");
+    mvaddstr(0,40, "User");
+    mvaddstr(0,50, "PID");
+    mvaddstr(0,60, "CPU");
+    mvaddstr(0,66, "MEM");
+    mvaddstr(0,72, "Time");
+    int row = 1;
+    for (Process& p : processes) {
+      mvaddnstr(row, 0, p.connection->getHostname().c_str(), 19);
+      mvaddnstr(row, 20, p.command.c_str(), 19);
+      mvaddnstr(row, 40, p.user.c_str(), 10);
+      mvaddnstr(row, 50, std::to_string(p.pid).c_str(), 10);
+      mvaddnstr(row, 60, std::to_string(p.cpu).c_str(), 5);
+      mvaddnstr(row, 66, std::to_string(p.mem).c_str(), 5);
+      mvaddnstr(row, 72, std::to_string(p.time).c_str(), 8);
+      
+      row++;
+      if (row == maxy)
+        break;
+    }
+    refresh();
+    action = getchar();
+    if (action == 'c') {
+      std::sort(processes.begin(), processes.end(), [](Process a, Process b) -> bool {
+        return a.cpu > b.cpu;
+      });
+    } else if (action == 'm') {
+      std::sort(processes.begin(), processes.end(), [](Process a, Process b) -> bool {
+        return a.mem > b.mem;
+      });
+    }
+  } while (action != 'q');
+  
+}
+
 int main(int argc, char** argv) {
   Configuration conf;
-  
-  std::vector<Connection> connections;
   
   connections.reserve(conf.getHosts().size());
 
@@ -35,17 +93,19 @@ int main(int argc, char** argv) {
 
   initscr();
   timeout(1000);
-  int row = 1;
-  attron(A_DIM);
-  mvaddstr(0, 0, "Hostname");
-  mvaddstr(0,40, "| Load");
-  mvaddstr(0,47, "| #usr");
-  attroff(A_DIM);
-  start_color();
-  init_pair(1, COLOR_RED, COLOR_BLACK);
-  std::string progress = "|/-\\";
-  int prog = 0;
+  char action;
   do {
+    int row = 1;
+    attron(A_DIM);
+    mvaddstr(0, 0, "Hostname");
+    mvaddstr(0,40, "| Load");
+    mvaddstr(0,47, "| #usr");
+    attroff(A_DIM);
+    start_color();
+    init_pair(1, COLOR_RED, COLOR_BLACK);
+    std::string progress = "|/-\\";
+    int prog = 0;
+
     attron(A_STANDOUT);
     mvaddch(0, 79, progress[prog]);
     attroff(A_STANDOUT);
@@ -90,7 +150,12 @@ int main(int argc, char** argv) {
     if (prog == 4)
       prog = 0;
     
-  } while (getch() != 'q');
+    action = getch();
+    if (action == 'o') {
+      offending();
+      clear();
+    }
+  } while (action != 'q');
   
   endwin();
   
