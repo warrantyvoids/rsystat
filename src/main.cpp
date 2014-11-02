@@ -27,7 +27,7 @@ void offending() {
   
   int maxx, maxy;
   getmaxyx(stdscr, maxy, maxx);
-  char action;
+  int action;
   do {
     clear();
     mvaddstr(0,0, "Host");
@@ -61,6 +61,42 @@ void offending() {
       std::sort(processes.begin(), processes.end(), [](Process a, Process b) -> bool {
         return a.mem > b.mem;
       });
+    } else if (action == 't') {
+      std::sort(processes.begin(), processes.end(), [](Process a, Process b) -> bool {
+        return a.time > b.time;
+      });
+    }
+    if (action == 'f') {
+      while ((action = getch()) != KEY_BACKSPACE) {
+        std::function<bool(Process)> func;
+        switch (action) {
+          case 'c':
+            func = [](Process a) -> bool {
+              return (a.cpu < 0.1);
+            };
+            break;
+          case 'm':
+            func = [](Process a) -> bool {
+              return (a.mem < 0.1);
+            };
+            break;
+          case 'u':
+            func = [](Process a) -> bool {
+              return (a.user == "root");
+            };
+            break;
+          default:
+            break;
+        }
+        
+        if (func) {
+          processes.erase(
+              std::remove_if(processes.begin(), processes.end(), func),
+              processes.end());
+          break;
+        }
+      }
+    
     }
   } while (action != 'q');
   
@@ -95,6 +131,12 @@ int main(int argc, char** argv) {
   initscr();
   timeout(1000);
   char action;
+  int prog = 0;
+  std::string progress = "|/-\\";
+  start_color();
+  init_pair(1, COLOR_RED, COLOR_BLACK);
+
+
   do {
     int row = 1;
     attron(A_DIM);
@@ -102,10 +144,6 @@ int main(int argc, char** argv) {
     mvaddstr(0,40, "| Load");
     mvaddstr(0,47, "| #usr");
     attroff(A_DIM);
-    start_color();
-    init_pair(1, COLOR_RED, COLOR_BLACK);
-    std::string progress = "|/-\\";
-    int prog = 0;
 
     attron(A_STANDOUT);
     mvaddch(0, 79, progress[prog]);
