@@ -72,7 +72,7 @@ int main(int argc, char** argv) {
       t.chars[1] = L'\0';
       for (double load : interp) {
         int loadScaled = (int)( std::log(load)/std::log(10) * 4 + 6 );
-        loadScaled = loadScaled > 8 ? 8 : loadScaled;
+        loadScaled = loadScaled > 7 ? 7 : loadScaled;
         loadScaled = loadScaled < 0 ? 0 : loadScaled;
         t.chars[0] = L'\u2581'+ loadScaled ;
         add_wch( &t );
