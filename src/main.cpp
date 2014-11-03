@@ -171,7 +171,6 @@ int main(int argc, char** argv) {
   connections.reserve(conf.getHosts().size());
 
   for (std::string hostname : conf.getHosts()) {
-    std::cout << hostname << std::endl;
     connections.emplace_back( hostname );
   }
   
@@ -181,12 +180,6 @@ int main(int argc, char** argv) {
       std::cerr << "Error!" << std::endl;
       continue;
     }
-    OperatingSystem * os = conn.getOS();
-    auto loads = os->getLoad();
-    for (double load : loads) {
-      std::cout << load << " ";
-    }
-    std::cout << std::endl;
   }
 
   setlocale(LC_ALL, "en_US.UTF-8");
@@ -219,6 +212,7 @@ int main(int argc, char** argv) {
         attron(A_BLINK | COLOR_PAIR(1));
         addstr(" OFFLINE ");
         attroff(A_BLINK | COLOR_PAIR(1));
+        row++;
         continue;
       }
     

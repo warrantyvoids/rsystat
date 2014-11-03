@@ -103,21 +103,77 @@ class FreeBSDOperatingSystem : public UnixOperatingSystem {
     }
 
     std::vector<Filesystem> getFilesystems() override {
-      ExecChannel exec = m_conn.exec("df -Tt ufs,ext2,ext3,ext4,xfs");
-      std::istream& in = exec.getStdOut();
-      
       std::vector<Filesystem> returns;
       Filesystem fs;
-      std::string line;
+      { //Traditional filesystems
+        ExecChannel exec = m_conn.exec("df -Tt ufs,ext2,ext3,ext4,xfs");
+        std::istream& in = exec.getStdOut();
       
-      fs.connection = &m_conn;
-      std::getline(in, line);
-      std::string dummy;
-      while (std::getline(in, line)) {
-        std::istringstream lin (line);
-        lin >> fs.source >> fs.type >> fs.size >> fs.used >> dummy >> dummy >> fs.target;
-        returns.push_back(fs);
+        Filesystem fs;
+        std::string line;
+      
+        fs.connection = &m_conn;
+        std::getline(in, line);
+        std::string dummy;
+        while (std::getline(in, line)) {
+          std::istringstream lin (line);
+          lin >> fs.source >> fs.type >> fs.size >> fs.used >> dummy >> dummy >> fs.target;
+          returns.push_back(fs);
+        }
+      
       }
+      { //ZFS
+        ExecChannel exec = m_conn.exec("zpool list -Ho name,size,alloc");
+        std::istream& in = exec.getStdOut();
+        
+        std::string line;
+        
+        Filesystem fs;
+        fs.connection = &m_conn;
+        fs.type = "zfs";
+        fs.source = "--";
+        while (std::getline(in, line)) {
+          std::istringstream lin(line);
+          
+          lin >> fs.target;
+          double size = 0;
+          
+          lin >> size;
+          char suffix;
+          lin >> suffix;
+          std::size_t modifier = 1;
+          if (suffix == 'T') {
+            modifier *= 1024 * 1024 * 1024;
+          }
+          if (suffix == 'G') {
+            modifier *= 1024 * 1024;
+          }
+          if (suffix == 'M') {
+            modifier *= 1024;
+          }
+          
+          fs.size = size * modifier;
+          
+          lin >> size;
+          lin >> suffix;
+          
+          modifier = 1;
+          if (suffix == 'T') {
+            modifier *= 1024 * 1024 * 1024;
+          }
+          if (suffix == 'G') {
+            modifier *= 1024 * 1024;
+          }
+          if (suffix == 'M') {
+            modifier *= 1024;
+          }
+          
+          fs.used = size * modifier;
+          
+          returns.push_back(fs);
+        }
+      }
+      
       return returns;
     }
 
@@ -135,6 +191,6 @@ OperatingSystem* createOS(Connection& conn) {
   } else if (os == "FreeBSD") {
     return new FreeBSDOperatingSystem(conn, os);
   } else {
-    throw "Poep";
+    throw "Unsupported Operating System";
   }
 }

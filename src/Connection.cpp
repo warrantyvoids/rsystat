@@ -57,8 +57,6 @@ Connection::Connection(const std::string& hostname) : m_hostname(hostname), m_os
   }
   
   m_os = createOS(*this);
-  std::cout << "Created OS:  ";
-  std::cout << m_os->getName() << std::endl;
 }
 
 Connection::Connection(Connection&& other) {
