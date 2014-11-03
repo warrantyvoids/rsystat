@@ -1,4 +1,4 @@
 rsystat
 =======
 
-Remote system status
+A tool to view and manage remote servers
