@@ -64,6 +64,24 @@ class LinuxOperatingSystem : public UnixOperatingSystem {
       return loads;
     }
     
+    std::vector<Filesystem> getFilesystems() override {
+      ExecChannel exec = m_conn.exec("df -t ufs -t ext2 -t ext3 -t ext4 -t xfs --output=source,target,fstype,size,used");
+      std::istream& in = exec.getStdOut();
+      
+      std::vector<Filesystem> returns;
+      Filesystem fs;
+      std::string line;
+      
+      fs.connection = &m_conn;
+      std::getline(in, line);
+      while (std::getline(in, line)) {
+        std::istringstream lin (line);
+        lin >> fs.source >> fs.target >> fs.type >> fs.size >> fs.used;
+        returns.push_back(fs);
+      }
+      return returns;
+    }
+    
 };
 
 class FreeBSDOperatingSystem : public UnixOperatingSystem {
@@ -83,6 +101,26 @@ class FreeBSDOperatingSystem : public UnixOperatingSystem {
       }
       return loads;
     }
+
+    std::vector<Filesystem> getFilesystems() override {
+      ExecChannel exec = m_conn.exec("df -Tt ufs,ext2,ext3,ext4,xfs");
+      std::istream& in = exec.getStdOut();
+      
+      std::vector<Filesystem> returns;
+      Filesystem fs;
+      std::string line;
+      
+      fs.connection = &m_conn;
+      std::getline(in, line);
+      std::string dummy;
+      while (std::getline(in, line)) {
+        std::istringstream lin (line);
+        lin >> fs.source >> fs.type >> fs.size >> fs.used >> dummy >> dummy >> fs.target;
+        returns.push_back(fs);
+      }
+      return returns;
+    }
+
     
 };
 

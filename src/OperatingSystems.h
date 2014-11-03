@@ -7,6 +7,7 @@
 #include <cstdlib>
 
 #include "Process.h"
+#include "Filesystem.h"
 #include "Connection.h"
 
 class OperatingSystem {
@@ -22,6 +23,8 @@ class OperatingSystem {
     virtual std::array<double,3> getLoad() = 0;
     virtual std::size_t getNUsers() = 0;
     virtual std::vector<std::string> getUsers() = 0;
+    
+    virtual std::vector<Filesystem> getFilesystems() = 0;
 
     virtual std::vector<Process> getProcesses() = 0;
 

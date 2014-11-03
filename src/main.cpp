@@ -102,6 +102,69 @@ void offending() {
   
 }
 
+void filesystem() {
+  std::vector<Filesystem> filesystems;
+  
+  for (Connection& conn : connections) {
+    if (!conn)
+      continue;
+      
+    std::vector<Filesystem> fss = conn.getOS()->getFilesystems();
+    for (Filesystem& fs : fss) {
+      filesystems.push_back(fs);
+    }
+  }
+  clear();
+  int action;
+  int maxx, maxy;
+  getmaxyx(stdscr, maxy, maxx);
+
+  do {
+    clear();
+    mvaddstr(0,0,"Host");
+    mvaddstr(0,20,"Source");
+    mvaddstr(0,40,"Dest");
+    mvaddstr(0,60,"Type");
+    mvaddstr(0,65,"Usage");
+    int row = 1;
+    for (Filesystem& fs : filesystems) {
+      mvaddnstr(row, 0, fs.connection->getHostname().c_str(), 19);
+      mvaddnstr(row, 20, fs.source.c_str(), 19);
+      mvaddnstr(row, 40, fs.target.c_str(), 19);
+      mvaddnstr(row, 60, fs.type.c_str(), 4 );
+      mvaddch(row, 65, '[');
+      cchar_t t;
+      t.attr = 0;
+      t.chars[1] = L'\0';
+      double usage = 12.0 * fs.used / fs.size;
+      for (std::size_t i = 0; i < 12; i++) {
+        int usg = (usage - i) * 9.0;
+        usg = usg < 0 ? 0 : usg;
+        usg = usg > 8 ? 8 : usg;
+        t.chars[0] = L'\u2590' - usg;
+        if (usg != 0) {
+          add_wch( &t );
+        } else {
+          addch( ' ' );
+        }
+      }
+      addch(']');
+      row++;
+      if (row > maxy)
+        break;
+    }
+    action = getch();
+    if (action == 'f') {
+      std::sort(filesystems.begin(), filesystems.end(), [](Filesystem a, Filesystem b) -> bool {
+        double frA = ((double)a.used) / a.size;
+        double frB = ((double)b.used) / b.size;
+
+        return (frA > frB);
+      });
+    }
+  } while (action != 'q');
+}
+
 int main(int argc, char** argv) {
   Configuration conf;
   
@@ -192,6 +255,9 @@ int main(int argc, char** argv) {
     action = getch();
     if (action == 'o') {
       offending();
+      clear();
+    } else if (action == 'f') {
+      filesystem();
       clear();
     }
   } while (action != 'q');
