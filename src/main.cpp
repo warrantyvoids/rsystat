@@ -169,8 +169,15 @@ int main(int argc, char** argv) {
   Configuration conf;
   
   connections.reserve(conf.getHosts().size());
+  
+  double nProgChars = 80.0 / conf.getHosts().size();
 
+  std::size_t nProgCharsSoFar = 0;
   for (std::string hostname : conf.getHosts()) {
+    while (nProgCharsSoFar < (nProgChars * connections.size())) {
+      std::cout << '=';
+      nProgCharsSoFar++;
+    }
     connections.emplace_back( hostname );
   }
   
