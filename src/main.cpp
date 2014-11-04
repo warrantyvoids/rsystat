@@ -178,6 +178,7 @@ int main(int argc, char** argv) {
       std::cout << '=';
       nProgCharsSoFar++;
     }
+    std::cout.flush();
     connections.emplace_back( hostname );
   }
   
